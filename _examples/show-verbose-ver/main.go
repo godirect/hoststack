@@ -40,10 +40,10 @@ func main() {
 	if err != nil {
 		log.Entry(ctx).Fatalln("ERROR: ShowVersion failed:", err)
 	}
-	log.Entry(ctx).Infof("VPP Version: %v\n" +
-                         "Compile Date: %v\n" +
-                         "Compile Location: %v", version.Version, version.BuildDate,
-                         version.BuildDirectory)
+	log.Entry(ctx).Infof("VPP Version: %v\n"+
+		"Compile Date: %v\n"+
+		"Compile Location: %v", version.Version, version.BuildDate,
+		version.BuildDirectory)
 
 	// Cancel the context governing vpp's lifecycle and wait for it to exit
 	cancel()

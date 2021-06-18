@@ -24,45 +24,47 @@ import (
 	"github.com/edwarnicke/log"
 	"github.com/edwarnicke/vpphelper"
 )
+
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel1 := context.WithCancel(context.Background())
 	// Connect to VPP with a 1 second timeout
-	connectCtx, _ := context.WithTimeout(ctx, time.Second)
+	connectCtx, cancel2 := context.WithTimeout(ctx, time.Second)
 	conn, vppErrCh := vpphelper.StartAndDialContext(connectCtx, vpphelper.WithVppConfig(vppConfContents))
-	exitOnErrCh(ctx, cancel, vppErrCh)
+	exitOnErrCh(ctx, cancel1, vppErrCh)
 
 	// Create a RPC client for the session api
 	c := session.NewServiceClient(conn)
-	_, s_err := c.SessionEnableDisable(ctx, &session.SessionEnableDisable{IsEnable: true})
-	if s_err != nil{
-		log.Entry(ctx).Fatalln("ERROR: Session Enable Failed:", s_err)
+	_, sErr := c.SessionEnableDisable(ctx, &session.SessionEnableDisable{IsEnable: true})
+	if sErr != nil {
+		log.Entry(ctx).Fatalln("ERROR: Session Enable Failed:", sErr)
 	}
 	log.Entry(ctx).Infof("Session Enabled")
 
-	appAttachReply, a_err := c.AppAttach(ctx, &session.AppAttach{})
-	if a_err != nil {
-		log.Entry(ctx).Fatalln("ERROR: AppAttach failed:", a_err)
+	appAttachReply, aErr := c.AppAttach(ctx, &session.AppAttach{})
+	if aErr != nil {
+		log.Entry(ctx).Fatalln("ERROR: AppAttach failed:", aErr)
 	}
 	log.Entry(ctx).Infof("Application Attached")
 
-	log.Entry(ctx).Infof("App Msg Queue: %v\n" +
-                         "VPP Control Msg Queue: %v\n"+
-						"VPP Control Queue Msg Thread Index: %v\n"+
-						"App Index: %v\n"+
-						"No. of fds exchanged: %v\n"+
-						"FD Flags: %v\n"+
-						"Segment Size: %v\n"+
-						"Segment Handle: %v\n", appAttachReply.AppMq, appAttachReply.VppCtrlMq,
-						appAttachReply.VppCtrlMqThread, appAttachReply.AppIndex, appAttachReply.NFds,
-						appAttachReply.FdFlags, appAttachReply.SegmentSize, appAttachReply.SegmentHandle)
+	log.Entry(ctx).Infof("App Msg Queue: %v\n"+
+		"VPP Control Msg Queue: %v\n"+
+		"VPP Control Queue Msg Thread Index: %v\n"+
+		"App Index: %v\n"+
+		"No. of fds exchanged: %v\n"+
+		"FD Flags: %v\n"+
+		"Segment Size: %v\n"+
+		"Segment Handle: %v\n", appAttachReply.AppMq, appAttachReply.VppCtrlMq,
+		appAttachReply.VppCtrlMqThread, appAttachReply.AppIndex, appAttachReply.NFds,
+		appAttachReply.FdFlags, appAttachReply.SegmentSize, appAttachReply.SegmentHandle)
 
-	// _, d_err := c.AppWorkerAddDel(ctx, &session.AppWorkerAddDel{AppIndex: appAttachReply.AppIndex, IsAdd: false})						
-	// if d_err != nil {
-	// 	log.Entry(ctx).Fatalln("ERROR: App Worker Deletion failed", d_err)
+	// _, dErr := c.AppWorkerAddDel(ctx, &session.AppWorkerAddDel{AppIndex: appAttachReply.AppIndex, IsAdd: false})
+	// if dErr != nil {
+	// 	log.Entry(ctx).Fatalln("ERROR: App Worker Deletion failed", dErr)
 	// }
 	// log.Entry(ctx).Infof("App Worker Deleted")
 	//	Cancel the context governing vpp's lifecycle and wait for it to exit
-	cancel()
+	cancel1()
+	cancel2()
 	<-vppErrCh
 }
 

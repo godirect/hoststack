@@ -1,4 +1,4 @@
-FROM ghcr.io/edwarnicke/govpp/vpp:20.09 as go
+FROM ghcr.io/harshgondaliya/govpp/vpp:v21.06 as go
 COPY --from=golang:1.15.3-buster /usr/local/go/ /go
 ENV PATH ${PATH}:/go/bin
 ENV GO111MODULE=on
@@ -13,6 +13,6 @@ COPY go.mod go.sum ./
 COPY . .
 RUN go build -o /bin/app-attach .
 
-FROM ghcr.io/edwarnicke/govpp/vpp:20.09 as runtime
+FROM ghcr.io/harshgondaliya/govpp/vpp:v21.06 as runtime
 COPY --from=build /bin/app-attach /bin/app-attach
 CMD /bin/app-attach

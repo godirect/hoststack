@@ -189,6 +189,8 @@ plugins {
 	plugin dpdk_plugin.so { disable }
 }
 
-session { evt_qs_memfd_seg }
+session {
+	use-app-socket-api
+}
 `
 )

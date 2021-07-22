@@ -17,13 +17,71 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"time"
 
-	"github.com/edwarnicke/govpp/binapi/session"
+	"bytes"
+	"encoding/binary"
+	"net"
+
 	"github.com/edwarnicke/log"
 	"github.com/edwarnicke/vpphelper"
+	"github.com/harshgondaliya/govpp/binapi/session"
 )
+
+// AppSapiMsgType type
+type AppSapiMsgType int8
+
+// ATTACH TYPE
+const (
+	ATTACH AppSapiMsgType = iota + 1
+)
+
+// AppAttachMsg type
+type AppAttachMsg struct {
+	Name    [64]uint8
+	Options [18]uint64
+}
+
+// AppAttachReplyMsg type
+type AppAttachReplyMsg struct {
+	Retval          int32
+	AppIndex        uint32
+	AppMq           uint64
+	VppCtrlMq       uint64
+	SegmentHandle   uint64
+	APIClientHandle uint32
+	VppCtrlMqThread uint8
+	NFds            uint8
+	FdFlags         uint8
+}
+
+// AppSapiMsgAttach type
+type AppSapiMsgAttach struct {
+	MsgType AppSapiMsgType
+	Msg     AppAttachMsg
+}
+
+// AppSapiMsgAttachReply type
+type AppSapiMsgAttachReply struct {
+	MsgType AppSapiMsgType
+	Msg     AppAttachReplyMsg
+}
+
+// MarshalBinary Function
+func (msg *AppSapiMsgAttach) MarshalBinary() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalBinary Function
+func (replyMsg *AppSapiMsgAttachReply) UnmarshalBinary(data []byte) error {
+	buf := bytes.NewReader(data)
+	err := binary.Read(buf, binary.LittleEndian, replyMsg)
+	return err
+}
 
 func main() {
 	ctx, cancel1 := context.WithCancel(context.Background())
@@ -40,29 +98,60 @@ func main() {
 	}
 	log.Entry(ctx).Infof("Session Enabled")
 
-	appAttachReply, aErr := c.AppAttach(ctx, &session.AppAttach{})
+	_, aErr := c.AppNamespaceAddDel(ctx, &session.AppNamespaceAddDel{NamespaceID: "12"})
 	if aErr != nil {
-		log.Entry(ctx).Fatalln("ERROR: AppAttach failed:", aErr)
+		log.Entry(ctx).Fatalln("ERROR: Adding App Namespace Failed", sErr)
 	}
-	log.Entry(ctx).Infof("Application Attached")
+	log.Entry(ctx).Infof("Added App Namespace")
 
-	log.Entry(ctx).Infof("App Msg Queue: %v\n"+
-		"VPP Control Msg Queue: %v\n"+
-		"VPP Control Queue Msg Thread Index: %v\n"+
-		"App Index: %v\n"+
+	socketAddr := "/var/run/vpp/app_ns_sockets/12"
+	udsConn, dErr := net.Dial("unixpacket", socketAddr)
+	if dErr != nil {
+		log.Entry(ctx).Fatalln("Dial Error", dErr)
+	}
+	log.Entry(ctx).Infof("Connected to Unix Socket")
+	defer func() {
+		_ = udsConn.Close()
+	}()
+	msg := AppSapiMsgAttach{MsgType: ATTACH, Msg: AppAttachMsg{Name: [64]uint8{97, 112, 112, 97, 116, 116, 97, 99, 104}, Options: [18]uint64{98}}}
+	encMsg, encErr := msg.MarshalBinary()
+	if encErr != nil {
+		log.Entry(ctx).Fatalln("Encoding Error", encErr)
+	}
+	log.Entry(ctx).Infof("Encoding Successful")
+
+	writer := bufio.NewWriter(udsConn)
+	_, writeErr := writer.Write(encMsg)
+	if writeErr != nil {
+		log.Entry(ctx).Fatalln("Error while writing encoded message over connection", writeErr)
+	}
+	_ = writer.Flush()
+	log.Entry(ctx).Infof("Successfully written message over connection")
+
+	reader := bufio.NewReader(udsConn)
+	buf, _, readErr := reader.ReadLine()
+	if readErr != nil {
+		log.Entry(ctx).Fatalln("Read Error", readErr)
+	}
+
+	var replyMsg AppSapiMsgAttachReply
+	decErr := replyMsg.UnmarshalBinary(buf)
+	if decErr != nil {
+		log.Entry(ctx).Fatalln("Error while decoding data read from the connection", decErr)
+	}
+	log.Entry(ctx).Infof("Successfully decoded message")
+	log.Entry(ctx).Infof("Application Attached\n")
+
+	log.Entry(ctx).Infof("App Index: %v\n"+
+		"App Message Queue: %v\n"+
+		"VPP Control Message Queue: %v\n"+
+		"Segment Handle: %v\n"+
+		"API Client Handle: %v\n"+
+		"VPP Control Message Queue Thread Index: %v\n"+
 		"No. of fds exchanged: %v\n"+
-		"FD Flags: %v\n"+
-		"Segment Size: %v\n"+
-		"Segment Handle: %v\n", appAttachReply.AppMq, appAttachReply.VppCtrlMq,
-		appAttachReply.VppCtrlMqThread, appAttachReply.AppIndex, appAttachReply.NFds,
-		appAttachReply.FdFlags, appAttachReply.SegmentSize, appAttachReply.SegmentHandle)
+		"FD Flags: %v\n", replyMsg.Msg.AppIndex, replyMsg.Msg.AppMq, replyMsg.Msg.VppCtrlMq, replyMsg.Msg.SegmentHandle,
+		replyMsg.Msg.APIClientHandle, replyMsg.Msg.VppCtrlMqThread, replyMsg.Msg.NFds, replyMsg.Msg.FdFlags)
 
-	// _, dErr := c.AppWorkerAddDel(ctx, &session.AppWorkerAddDel{AppIndex: appAttachReply.AppIndex, IsAdd: false})
-	// if dErr != nil {
-	// 	log.Entry(ctx).Fatalln("ERROR: App Worker Deletion failed", dErr)
-	// }
-	// log.Entry(ctx).Infof("App Worker Deleted")
-	//	Cancel the context governing vpp's lifecycle and wait for it to exit
 	cancel1()
 	cancel2()
 	<-vppErrCh

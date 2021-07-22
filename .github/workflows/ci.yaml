@@ -78,13 +78,13 @@ jobs:
       - name: Run tests
         run: docker run --privileged $(docker build -q ./app-attach --target runtime)
       - name: Find merged PR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/exercies'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/exercises'
         uses: jwalton/gh-find-current-pr@v1
         id: findPr
         with:
           github-token: ${{ github.token }}
       - name: Publish Image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/exercies' && success() && steps.findPr.outputs.number
+        if: github.event_name == 'push' && github.ref == 'refs/heads/exercises' && success() && steps.findPr.outputs.number
         uses: matootie/github-docker@v3.0.0
         with:
           accessToken: ${{ github.token }}

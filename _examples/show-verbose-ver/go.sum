@@ -1,13 +1,15 @@
 git.fd.io/govpp.git v0.3.6-0.20210202134006-4c1cccf48cd1 h1:yNpDKZPsqbDXAuOUSKnJWI22QZp51Zd5fV8NvGvzOtU=
 git.fd.io/govpp.git v0.3.6-0.20210202134006-4c1cccf48cd1/go.mod h1:OCVd4W8SH+666KRQoMj6PM+oipLDZAHhqMz9B1TGbgI=
+git.fd.io/govpp.git v0.3.6-0.20210624052302-91800ed117b7 h1:9071eflvik/PRT8NY4iI3ZnfQA99rjDOdQcTeLrPyzY=
+git.fd.io/govpp.git v0.3.6-0.20210624052302-91800ed117b7/go.mod h1:OCVd4W8SH+666KRQoMj6PM+oipLDZAHhqMz9B1TGbgI=
 github.com/bennyscetbun/jsongo v1.1.0/go.mod h1:suxbVmjBV8+A2BBAM5EYVh6Uj8j3rqJhzWf3hv7Ff8U=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/edwarnicke/exechelper v1.0.2 h1:dD49Ui2U0FBFxxhalnKw6vLS0P0TkgnXBRvKL/xmC5w=
 github.com/edwarnicke/exechelper v1.0.2/go.mod h1:/T271jtNX/ND4De6pa2aRy2+8sNtyCDB1A2pp4M+fUs=
-github.com/edwarnicke/govpp v0.0.0-20210609151507-acad58175c1a h1:/NJNRmiruiuNBLKPcxVtsrX3jw8ux1Xtklu9dbKZDhs=
-github.com/edwarnicke/govpp v0.0.0-20210609151507-acad58175c1a/go.mod h1:+J/hMuJr9nxWWHG+JJqhl+jpE4H97jO0tpvsaxSYEdU=
+github.com/edwarnicke/govpp v0.0.0-20210709104319-97cb6fe890e9 h1:G0I30uuudpTfeCKZYoKRex0r3XAEbB7vOHwOc1nG7yQ=
+github.com/edwarnicke/govpp v0.0.0-20210709104319-97cb6fe890e9/go.mod h1:+J/hMuJr9nxWWHG+JJqhl+jpE4H97jO0tpvsaxSYEdU=
 github.com/edwarnicke/log v1.0.0 h1:T6uRNCmR99GTt/CpRr2Gz8eGW8fm0HMThDNGdNxPaGk=
 github.com/edwarnicke/log v1.0.0/go.mod h1:eWsQQlQ0IU5wHlJvyXFH3dS8s2g9GzN7JnXodo6yaIY=
 github.com/edwarnicke/vpphelper v0.0.0-20210512223648-f914b171f679 h1:TQGpOyiM1EZtGzKN5vwN5RLHc0Mskk9uh+aNsdynb1k=
@@ -19,6 +21,8 @@ github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs
 github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaUGG7oYTSPP8MxqL4YI3kZKwcP4=
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=
+github.com/harshgondaliya/govpp v0.0.0-20210716120413-7fa7f613b02c h1:c8EWIj+XkWtZXlcGB6EzHGOJiyrkIm29dHORKV6xU+c=
+github.com/harshgondaliya/govpp v0.0.0-20210716120413-7fa7f613b02c/go.mod h1:h16LwTXMpTez1tBvP5ZfxaHsNzKeKt+cip7telx3H/8=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=

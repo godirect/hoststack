@@ -20,10 +20,14 @@ import (
 	"bufio"
 	"context"
 	"time"
+	"io"
+	"fmt"
 
 	"bytes"
 	"encoding/binary"
 	"net"
+	"syscall"
+//	"github.com/justincormack/go-memfd"
 
 	"github.com/edwarnicke/log"
 	"github.com/edwarnicke/vpphelper"
@@ -82,7 +86,11 @@ func (replyMsg *AppSapiMsgAttachReply) UnmarshalBinary(data []byte) error {
 	err := binary.Read(buf, binary.LittleEndian, replyMsg)
 	return err
 }
-
+func isEOF(err error) bool {
+	strerr := err.Error()
+	errlen := len(strerr)
+	return errlen >= 3 && strerr[errlen-3:] == io.EOF.Error()
+}
 func main() {
 	ctx, cancel1 := context.WithCancel(context.Background())
 	// Connect to VPP with a 1 second timeout
@@ -152,6 +160,35 @@ func main() {
 		"FD Flags: %v\n", replyMsg.Msg.AppIndex, replyMsg.Msg.AppMq, replyMsg.Msg.VppCtrlMq, replyMsg.Msg.SegmentHandle,
 		replyMsg.Msg.APIClientHandle, replyMsg.Msg.VppCtrlMqThread, replyMsg.Msg.NFds, replyMsg.Msg.FdFlags)
 
+	oob := make([]byte, syscall.CmsgSpace(4*int(replyMsg.Msg.NFds)))
+	var b []byte
+	_, oobn, _, _, readConnErr := udsConn.(interface {
+		ReadMsgUnix(b, oob []byte) (n, oobn, flags int, addr *net.UnixAddr, err error)
+	}).ReadMsgUnix(b, oob)
+	fmt.Printf("%d\n",oobn)
+	if readConnErr != nil {
+		//if !isEOF(readConnErr){
+			log.Entry(ctx).Fatalln("Error while reading message from the connection. ", readConnErr)
+		//}
+	}
+	msgs, parseCtlErr := syscall.ParseSocketControlMessage(oob[:oobn])
+	if parseCtlErr != nil {
+		log.Entry(ctx).Fatalln("Error while parsing socket control message. ", parseCtlErr)
+	}
+	var fdList []int
+	fmt.Printf("len = %d\n",len(msgs))
+	for i := range msgs {
+		fds, parseRightsErr := syscall.ParseUnixRights(&msgs[i])
+		fmt.Printf("%v\n",fds)
+		fdList = append(fdList, fds...)
+		if parseRightsErr != nil {
+			log.Entry(ctx).Fatalln("Error while parsing rights. ", parseRightsErr)
+		}
+	}
+	fmt.Printf("%v\n",fdList)
+	// uintptr(fds)
+	// mfdPtr, mfdError:= memfd.New()
+	
 	cancel1()
 	cancel2()
 	<-vppErrCh

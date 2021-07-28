@@ -24,10 +24,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"net"
+	"syscall"
+
+	//	"github.com/justincormack/go-memfd"
 
 	"github.com/edwarnicke/log"
 	"github.com/edwarnicke/vpphelper"
 	"github.com/harshgondaliya/govpp/binapi/session"
+	"github.com/justincormack/go-memfd"
 )
 
 // AppSapiMsgType type
@@ -35,7 +39,9 @@ type AppSapiMsgType int8
 
 // ATTACH TYPE
 const (
-	ATTACH AppSapiMsgType = iota + 1
+	ATTACH             AppSapiMsgType = iota + 1
+	fdFlagVppMqSegment uint8          = 1
+	fdFlagMemfdSegment uint8          = 2
 )
 
 // AppAttachMsg type
@@ -82,7 +88,6 @@ func (replyMsg *AppSapiMsgAttachReply) UnmarshalBinary(data []byte) error {
 	err := binary.Read(buf, binary.LittleEndian, replyMsg)
 	return err
 }
-
 func main() {
 	ctx, cancel1 := context.WithCancel(context.Background())
 	// Connect to VPP with a 1 second timeout
@@ -128,11 +133,15 @@ func main() {
 	_ = writer.Flush()
 	log.Entry(ctx).Infof("Successfully written message over connection")
 
-	reader := bufio.NewReader(udsConn)
-	buf, _, readErr := reader.ReadLine()
-	if readErr != nil {
-		log.Entry(ctx).Fatalln("Read Error", readErr)
+	oob := make([]byte, syscall.CmsgSpace(4*int(2)))
+	buf := make([]byte, 300) // 300 is arbitrary here, we should figure out how to make a wiser choice
+	n, oobn, _, _, readConnErr := udsConn.(interface {
+		ReadMsgUnix(b, oob []byte) (n, oobn, flags int, addr *net.UnixAddr, err error)
+	}).ReadMsgUnix(buf, oob)
+	if readConnErr != nil {
+		log.Entry(ctx).Fatalln("Error while reading message from the connection. ", readConnErr)
 	}
+	buf = buf[:n]
 
 	var replyMsg AppSapiMsgAttachReply
 	decErr := replyMsg.UnmarshalBinary(buf)
@@ -152,6 +161,45 @@ func main() {
 		"FD Flags: %v\n", replyMsg.Msg.AppIndex, replyMsg.Msg.AppMq, replyMsg.Msg.VppCtrlMq, replyMsg.Msg.SegmentHandle,
 		replyMsg.Msg.APIClientHandle, replyMsg.Msg.VppCtrlMqThread, replyMsg.Msg.NFds, replyMsg.Msg.FdFlags)
 
+	msgs, parseCtlErr := syscall.ParseSocketControlMessage(oob[:oobn])
+	if parseCtlErr != nil {
+		log.Entry(ctx).Fatalln("Error while parsing socket control message. ", parseCtlErr)
+	}
+	var fdList []int
+	for i := range msgs {
+		fds, parseRightsErr := syscall.ParseUnixRights(&msgs[i])
+		fdList = append(fdList, fds...)
+		if parseRightsErr != nil {
+			log.Entry(ctx).Fatalln("Error while parsing rights. ", parseRightsErr)
+		}
+	}
+	var memBuf1 []byte
+	var memBuf2 []byte
+	var memBufErr1 error
+	var memBufErr2 error
+
+	if replyMsg.Msg.FdFlags&fdFlagVppMqSegment > 0 {
+		mfdPtr1, newMfdErr1 := memfd.New(uintptr(fdList[0]))
+		if newMfdErr1 != nil {
+			log.Entry(ctx).Fatalln("Error while creating memfd. ", newMfdErr1)
+		}
+		memBuf1, memBufErr1 = mfdPtr1.Map()
+		if memBufErr1 != nil {
+			log.Entry(ctx).Fatalln("Error while creating memfd. ", memBufErr1)
+		}
+	}
+	if replyMsg.Msg.FdFlags&fdFlagMemfdSegment > 0 {
+		mfdPtr2, newMfdErr2 := memfd.New(uintptr(fdList[1]))
+		if newMfdErr2 != nil {
+			log.Entry(ctx).Fatalln("Error while creating memfd. ", newMfdErr2)
+		}
+		memBuf2, memBufErr2 = mfdPtr2.Map()
+		if memBufErr2 != nil {
+			log.Entry(ctx).Fatalln("Error while creating memfd. ", memBufErr2)
+		}
+	}
+	_ = memBuf1
+	_ = memBuf2
 	cancel1()
 	cancel2()
 	<-vppErrCh

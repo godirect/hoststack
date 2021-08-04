@@ -30,14 +30,14 @@ linters-settings:
   golint:
     min-confidence: 0.8
   gocyclo:
-    min-complexity: 20
+    min-complexity: 15
   maligned:
     suggest-new: true
   dupl:
     threshold: 150
   funlen:
-    Lines: 400
-    Statements: 250
+    Lines: 100
+    Statements: 50
   goconst:
     min-len: 2
     min-occurrences: 2

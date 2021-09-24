@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Cisco and/or its affiliates.
+// Copyright (c) 2021 Harsh Gondaliya.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -24,5 +24,6 @@ type Worker struct {
 
 // NewWorker function
 func NewWorker(attachment *Attachment, memorySegment *MemorySegment) *Worker {
+	// TBD: Call the SvmMsgQAttach function here and then the eventfd will be added.
 	return &Worker{attachment: attachment, memorySegment: memorySegment}
 }

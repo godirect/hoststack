@@ -9,7 +9,7 @@ linters-settings:
     template-path: "../.ci/license/template.txt"
     values:
       const:
-        year: 2020
+        year: 2021
       regexp:
         year-range: ((\d\d\d\d-{{year}})|({{year}}))
         company: .*

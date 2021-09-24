@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Cisco and/or its affiliates.
+// Copyright (c) 2021 Harsh Gondaliya.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -33,8 +33,8 @@ type AppSapiMsgType int8
 // ATTACH TYPE
 const (
 	ATTACH             AppSapiMsgType = iota + 1
-	fdFlagVppMqSegment uint8          = 1
-	fdFlagMemfdSegment uint8          = 2
+	FdFlagVppMqSegment uint8          = 1
+	FdFlagMemfdSegment uint8          = 2
 )
 
 // AppAttachMsg type
@@ -77,8 +77,8 @@ func (msg *AppSapiMsgAttach) MarshalBinary() ([]byte, error) {
 
 // UnmarshalBinary Function
 func (replyMsg *AppSapiMsgAttachReply) UnmarshalBinary(data []byte) error {
-	buf := bytes.NewReader(data)
-	err := binary.Read(buf, binary.LittleEndian, replyMsg)
+	reader := bytes.NewReader(data)
+	err := binary.Read(reader, binary.LittleEndian, replyMsg)
 	return err
 }
 
@@ -152,11 +152,12 @@ func NewAttachment(ns *Namespace, udsConn io.Writer) *Attachment {
 		}
 	}
 
-	if replyMsg.Msg.FdFlags&fdFlagVppMqSegment > 0 {
+	if replyMsg.Msg.FdFlags&FdFlagVppMqSegment > 0 {
 		attachment.vppMqMemorySegment = NewMemorySegment(fdList[0])
 	}
-	if replyMsg.Msg.FdFlags&fdFlagMemfdSegment > 0 {
+	if replyMsg.Msg.FdFlags&FdFlagMemfdSegment > 0 {
 		attachment.workers = append(attachment.workers, NewWorker(attachment, NewMemorySegment(fdList[1])))
 	}
+
 	return attachment
 }

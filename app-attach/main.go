@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Cisco and/or its affiliates.
+// Copyright (c) 2021 Harsh Gondaliya.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -48,6 +48,7 @@ func main() {
 	ns := NewNamespace(vppConn, id)
 	_, _ = ns.Dial()
 	_ = ns.Attach()
+
 	ns.Close()
 
 	cancel1()

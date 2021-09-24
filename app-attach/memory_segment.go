@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Cisco and/or its affiliates.
+// Copyright (c) 2021 Harsh Gondaliya.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -23,8 +23,8 @@ import (
 
 // MemorySegment struct
 type MemorySegment struct {
-	memfd       *memfd.Memfd
-	mappedBytes []byte
+	Memfd       *memfd.Memfd
+	MappedBytes []byte
 }
 
 // NewMemorySegment function
@@ -38,7 +38,7 @@ func NewMemorySegment(fd int) *MemorySegment {
 		log.Fatalf("Error while creating memfd: %v", memSegmentErr)
 	}
 	return &MemorySegment{
-		memfd:       mfdPtr,
-		mappedBytes: memSegment,
+		Memfd:       mfdPtr,
+		MappedBytes: memSegment,
 	}
 }
